@@ -18,8 +18,6 @@ class NgoProfileIn(BaseModel):
     registration_number: str | None = None
     
 class NgoProfileOut(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
     organization_name: str
     org_type: Literal["NGO", "VOLUNTEER"]
     registration_number: str | None = None
@@ -53,8 +51,6 @@ class UserLogin(BaseModel):
     password: str
 
 class UserResponse(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    
     id: str
     name: str
     email: EmailStr
