@@ -1,6 +1,10 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from app.database import client, create_indexes
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from app.utils.errors import AppError
+from app.routers.auth import router as auth_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -9,13 +13,23 @@ async def lifespan(app: FastAPI):
     client.close()
 
 app = FastAPI(title="FoodShare API", lifespan=lifespan)
+app.include_router(auth_router, prefix="/api/v1")
+
+@app.exception_handler(AppError)
+async def app_error_handler(request: Request, exc: AppError):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "detail": exc.detail,
+            "code": exc.code,
+        },
+    )
 
 @app.get("/health")
 async def health():
     await client.admin.command("ping")
 
-    return{
+    return {
         "status": "ok",
         "database": "connected"
     }
-
