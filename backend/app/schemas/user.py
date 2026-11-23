@@ -58,7 +58,7 @@ class UserResponse(BaseModel):
     id: str
     name: str
     email: EmailStr
-    role: Literal["DONOR", "NGO"]
+    role: Literal["DONOR", "NGO", "ADMIN"]
     phone: str
     address: Address
     ngo_profile: NgoProfileOut | None = None
