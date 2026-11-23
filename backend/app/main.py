@@ -3,6 +3,8 @@ from fastapi import FastAPI
 from app.database import client, create_indexes
 from fastapi import Request
 from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
+from fastapi.encoders import jsonable_encoder
 from app.utils.errors import AppError
 from app.routers.auth import router as auth_router
 
@@ -22,6 +24,16 @@ async def app_error_handler(request: Request, exc: AppError):
         content={
             "detail": exc.detail,
             "code": exc.code,
+        },
+    )
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    return JSONResponse(
+        status_code=422,
+        content={
+            "detail": jsonable_encoder(exc.errors()),
+            "code": "VALIDATION_ERROR",
         },
     )
 
