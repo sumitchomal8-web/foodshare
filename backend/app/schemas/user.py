@@ -5,15 +5,15 @@ from datetime import datetime
 class Address(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    street: str
-    city: str
-    state: str
-    pincode: str
+    street: str = Field(min_length=1)
+    city: str = Field(min_length=1)
+    state: str = Field(min_length=1)
+    pincode: str = Field(pattern=r"^\d{6}$")
 
 class NgoProfileIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
     
-    organization_name: str
+    organization_name: str = Field(min_length=1)
     org_type: Literal["NGO", "VOLUNTEER"]
     registration_number: str | None = None
 
@@ -32,10 +32,10 @@ class NgoProfileOut(BaseModel):
 class UserRegister(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    name: str
+    name: str = Field(min_length=1)
     email: EmailStr
-    password: str = Field(min_length=8)
-    phone: str
+    password: str = Field(min_length=8, max_length=72)
+    phone: str = Field(min_length=1)
     role: Literal["DONOR", "NGO"]
     address: Address
     ngo_profile: NgoProfileIn | None = None
@@ -54,7 +54,7 @@ class UserLogin(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     email: EmailStr
-    password: str
+    password: str = Field(min_length=1, max_length=72)
 
 class UserResponse(BaseModel):
     id: str
