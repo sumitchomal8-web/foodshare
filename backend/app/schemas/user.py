@@ -10,6 +10,14 @@ class Address(BaseModel):
     state: str = Field(min_length=1)
     pincode: str = Field(pattern=r"^\d{6}$")
 
+class AddressUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    street: str | None = Field(default=None, min_length=1)
+    city: str | None = Field(default=None, min_length=1)
+    state: str | None = Field(default=None, min_length=1)
+    pincode: str | None = Field(default=None, pattern=r"^\d{6}$")
+
 class NgoProfileIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
     
@@ -55,6 +63,18 @@ class UserLogin(BaseModel):
 
     email: EmailStr
     password: str = Field(min_length=1, max_length=72)
+
+class UserUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    name: str | None = Field(default=None, min_length=1)
+    phone: str | None = Field(default=None, min_length=1)
+    address: AddressUpdate | None = None
+
+class NgoVerificationUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    status: Literal["VERIFIED", "REJECTED"]
 
 class UserResponse(BaseModel):
     id: str

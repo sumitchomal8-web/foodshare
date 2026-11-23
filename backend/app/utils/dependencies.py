@@ -40,3 +40,16 @@ async def get_current_user(
             detail="Invalid or expired access token",
             code="INVALID_TOKEN",
         )
+
+def require_role(*allowed_roles: str):
+    async def role_checker(
+        current_user: dict = Depends(get_current_user),
+    ) -> dict:
+        if current_user.get("role") not in allowed_roles:
+            raise AppError(
+                status_code=403,
+                detail="Insufficient permissions",
+                code="FORBIDDEN",
+            )
+        return current_user
+    return role_checker
