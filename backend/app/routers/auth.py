@@ -38,6 +38,8 @@ async def register_user(user_data: UserRegister):
 
     if user_document["role"] == "NGO":
         user_document["ngo_profile"]["verification_status"] = "PENDING"
+        user_document["ngo_profile"]["verified_by"] = None
+        user_document["ngo_profile"]["verified_at"] = None
 
     try:
         result = await db.users.insert_one(user_document)
