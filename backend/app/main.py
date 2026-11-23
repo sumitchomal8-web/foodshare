@@ -1,12 +1,13 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
-from app.database import client, create_indexes
-from fastapi import Request
+from fastapi import FastAPI, Depends, Request
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from fastapi.encoders import jsonable_encoder
+
+from app.database import client, create_indexes
 from app.utils.errors import AppError
 from app.routers.auth import router as auth_router
+from app.utils.dependencies import get_current_user
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -44,4 +45,13 @@ async def health():
     return {
         "status": "ok",
         "database": "connected"
+    }
+
+@app.get("/test-protected")
+async def test_protected_route(
+    current_user: dict = Depends(get_current_user)
+):
+    return {
+        "message": "Authenticated!",
+        "user": current_user,
     }
