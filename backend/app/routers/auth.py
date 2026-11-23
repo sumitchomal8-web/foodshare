@@ -79,8 +79,8 @@ async def login_user(user_data: UserLogin):
     if not user.get("is_active", False):
         raise AppError(
             status_code=403,
-            detail="Account is inactive",
-            code="ACCOUNT_INACTIVE",
+            detail="Account is disabled",
+            code="ACCOUNT_DISABLED",
         )
 
     access_token = create_access_token(
