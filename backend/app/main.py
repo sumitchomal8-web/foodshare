@@ -9,6 +9,7 @@ from app.utils.errors import AppError
 from app.routers.auth import router as auth_router
 from app.routers.users import router as users_router
 from app.routers.admin import router as admin_router
+from app.routers.listings import router as listings_router
 from app.utils.dependencies import get_current_user
 
 @asynccontextmanager
@@ -23,6 +24,7 @@ app = FastAPI(title="FoodShare API", lifespan=lifespan)
 app.include_router(auth_router, prefix="/api/v1")
 app.include_router(users_router, prefix="/api/v1")
 app.include_router(admin_router, prefix="/api/v1")
+app.include_router(listings_router, prefix="/api/v1")
 
 @app.exception_handler(AppError)
 async def app_error_handler(request: Request, exc: AppError):
