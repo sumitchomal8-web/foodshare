@@ -14,14 +14,16 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 async def register_user(user_data: UserRegister):
     email = str(user_data.email).lower()
 
+    email_exists_error = AppError(
+        status_code=409,
+        detail="Email already registered",
+        code="EMAIL_EXISTS",
+    )
+
     existing_user = await db.users.find_one({"email": email})
 
     if existing_user:
-        raise AppError(
-            status_code=409,
-            detail="Email already registered",
-            code="EMAIL_EXISTS",
-        )
+        raise email_exists_error
 
     user_document = user_data.model_dump()
 
@@ -45,11 +47,7 @@ async def register_user(user_data: UserRegister):
         result = await db.users.insert_one(user_document)
 
     except DuplicateKeyError:
-        raise AppError(
-            status_code=409, 
-            detail="Email already registered",
-            code="EMAIL_EXISTS",
-        )
+        raise email_exists_error
 
     response_document = user_document.copy()
 
