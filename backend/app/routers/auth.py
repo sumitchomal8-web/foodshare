@@ -32,7 +32,9 @@ async def register_user(user_data: UserRegister):
     user_document["email"] = email
 
     user_document["is_active"] = True
-    user_document["created_at"] = datetime.now(timezone.utc)
+    now = datetime.now(timezone.utc)
+    user_document["created_at"] = now
+    user_document["updated_at"] = now
 
     if user_document["role"] == "NGO":
         user_document["ngo_profile"]["verification_status"] = "PENDING"
