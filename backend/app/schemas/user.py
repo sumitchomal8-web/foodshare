@@ -16,6 +16,12 @@ class NgoProfileIn(BaseModel):
     organization_name: str
     org_type: Literal["NGO", "VOLUNTEER"]
     registration_number: str | None = None
+
+    @model_validator(mode="after")
+    def check_registration_number(self):
+        if self.org_type == "NGO" and not (self.registration_number and self.registration_number.strip()):
+            raise ValueError("Registration number is required for NGO")
+        return self
     
 class NgoProfileOut(BaseModel):
     organization_name: str
