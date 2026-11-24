@@ -1,11 +1,15 @@
+from bson import ObjectId
+from bson.errors import InvalidId
 from fastapi import Depends
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError
 
+from app.database import db
 from app.utils.errors import AppError
 from app.utils.security import decode_access_token
 
 bearer_scheme = HTTPBearer(auto_error=False)
+
 
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
@@ -13,33 +17,46 @@ async def get_current_user(
     if credentials is None:
         raise AppError(
             status_code=401,
-            detail="Not authenticated",
-            code="NOT_AUTHENTICATED",
+            detail="Missing authentication token",
+            code="TOKEN_INVALID",
         )
 
     token = credentials.credentials
 
     try:
         payload = decode_access_token(token)
-        user_id = payload.get("sub")
-        role = payload.get("role")
-
-        if not user_id or not role:
+        sub = payload.get("sub")
+        if not sub:
             raise AppError(
                 status_code=401,
                 detail="Invalid access token",
-                code="INVALID_TOKEN",
+                code="TOKEN_INVALID",
             )
-        return {
-            "user_id": user_id,
-            "role": role,
-        }
-    except JWTError:
+        user_id = ObjectId(sub)
+    except (JWTError, InvalidId):
         raise AppError(
             status_code=401,
             detail="Invalid or expired access token",
-            code="INVALID_TOKEN",
+            code="TOKEN_INVALID",
         )
+
+    user = await db.users.find_one({"_id": user_id})
+    if not user:
+        raise AppError(
+            status_code=401,
+            detail="User not found",
+            code="TOKEN_INVALID",
+        )
+
+    if not user.get("is_active", False):
+        raise AppError(
+            status_code=403,
+            detail="Account is disabled",
+            code="ACCOUNT_DISABLED",
+        )
+
+    return user
+
 
 def require_role(*allowed_roles: str):
     async def role_checker(
@@ -52,4 +69,6 @@ def require_role(*allowed_roles: str):
                 code="FORBIDDEN",
             )
         return current_user
+
     return role_checker
+
