@@ -4,9 +4,9 @@ from fastapi import APIRouter
 from pymongo.errors import DuplicateKeyError
 
 from app.database import db
-from app.schemas.user import Token, UserRegister, UserResponse, UserLogin
+from app.schemas.user import Token, UserLogin, UserRegister, UserResponse
 from app.utils.errors import AppError
-from app.utils.security import hash_password, verify_password, create_access_token
+from app.utils.security import create_access_token, hash_password, verify_password
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -45,15 +45,12 @@ async def register_user(user_data: UserRegister):
 
     try:
         result = await db.users.insert_one(user_document)
-
     except DuplicateKeyError:
         raise email_exists_error
 
     response_document = user_document.copy()
-
     response_document.pop("_id", None)
     response_document.pop("password_hash", None)
-
     response_document["id"] = str(result.inserted_id)
 
     return UserResponse(**response_document)
