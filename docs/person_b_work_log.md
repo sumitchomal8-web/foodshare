@@ -373,26 +373,32 @@ Per Section 2 of the Master Spec (*"Admin accounts are created manually in the d
 
 ---
 
-## 17. Git Branching Architecture & Version Control (Spec Section 10)
+## 18. Frontend Implementation (React + Vite + Tailwind CSS)
 
-### 17.1 Clean-up & Remote Setup
-1. **Removed Redundant File:** Removed empty 0-byte file `backend/app/routers/user.py` to prevent route shadowing with `backend/app/routers/users.py`.
-2. **Removed Nested Clone:** Removed accidental nested git clone directory `foodshare/` inside the root workspace.
-3. **Configured Upstream Remote:** Added `git remote add origin https://github.com/sumitchomal8-web/foodshare.git`.
+### 18.1 Tech Stack & Tooling
+* **Framework:** React 18
+* **Bundler & Dev Server:** Vite 5 (configured with `/api` reverse proxy to FastAPI on port 8000)
+* **Styling:** Tailwind CSS v3 + PostCSS + Autoprefixer
+* **Routing:** React Router DOM v6
+* **Icons:** Lucide React
 
-### 17.2 Branch-per-Module Implementation
-Per Master Spec Section 10 (*"One branch per module... Small commits, each a single step, with a clear message starting with a verb"*):
+### 18.2 Architecture & Components
+1. **API Client (`frontend/src/api/client.js`):** Unified fetch wrapper handling JWT `Authorization: Bearer <token>`, error shape parsing `{ detail, code }`, and sub-APIs for `auth`, `users`, `donor`, `donations`, `ngo`, and `admin`.
+2. **Auth Context (`frontend/src/context/AuthContext.jsx`):** Global user state, login, registration, logout, JWT persistence in `localStorage`, and verification status flag `isVerifiedNgo`.
+3. **Route Protection (`frontend/src/components/ProtectedRoute.jsx`):** RBAC route guard enforcing role-based access (`DONOR`, `NGO`, `ADMIN`).
+4. **Role Views:**
+   * **Donor:**
+     * `DonorDashboard.jsx`: Active and past donations listing, status tracking, cancel action.
+     * `CreateDonation.jsx`: Donation listing form with auto pre-fill of donor address and date pickers.
+   * **NGO (Person B):**
+     * `NgoBrowse.jsx`: Available surplus listings grid, city and food type filters, claim/accept action with verification gate.
+     * `NgoDeliveries.jsx`: Accepted deliveries tracker with step-by-step lifecycle actions (`Mark as Picked Up` → `Mark as Distributed` → `Mark as Completed`).
+   * **Admin (Person B):**
+     * `AdminDashboard.jsx`: Platform KPI cards, donation counts by food type, pending verification alerts.
+     * `AdminNgos.jsx`: Pending NGO review with instant one-click Approve and Reject actions.
+     * `AdminUsers.jsx`: Platform user registry with role filtering and account activation/deactivation toggles.
+     * `AdminDonations.jsx`: Platform-wide donation audit table with status and food type filters.
 
-| Branch Name | Commit Message | Files Included | Purpose |
-|---|---|---|---|
-| `feature/setup` | `Add project setup, configuration, database indexes, and documentation` | `.gitignore`, `.python-version`, `README.md`, `pyproject.toml`, `uv.lock`, `docs/`, `backend/.env.example`, `backend/pyproject.toml`, `backend/README.md`, `backend/app/config.py`, `backend/app/database.py`, `backend/tests/conftest.py` | Initial repo setup, indexes, and documentation |
-| `feature/auth` | `Add password hashing, JWT authentication, and user profile management` | `backend/app/utils/security.py`, `backend/app/utils/dependencies.py`, `backend/app/schemas/user.py`, `backend/app/routers/auth.py`, `backend/app/routers/users.py` | Auth contracts & endpoints (Person A) |
-| `feature/donor` | `Add donor endpoints for creating, editing, and cancelling donations` | `backend/app/routers/donor.py`, `backend/tests/test_auth_donor_api.py` | Donor endpoints & tests (Person A) |
-| `feature/donations` | `Add donation lifecycle state machine, atomic acceptance, and browsing endpoints` | `backend/app/schemas/donation.py`, `backend/app/services/donation_service.py`, `backend/app/routers/donations.py`, `backend/tests/test_donation_service.py`, `backend/tests/test_donations_api.py` | Person B: Core donation module |
-| `feature/ngo` | `Add NGO verification enforcement and accepted donations query endpoint` | `backend/app/services/ngo_service.py`, `backend/app/routers/ngo.py` | Person B: NGO volunteer module |
-| `feature/admin` | `Add admin user management, NGO verification, platform stats, and seed script` | `backend/app/schemas/admin.py`, `backend/app/services/admin_service.py`, `backend/app/services/stats_service.py`, `backend/app/routers/admin.py`, `backend/scripts/seed.py`, `backend/tests/test_admin_api.py`, `backend/app/main.py` | Person B: Admin & Analytics modules |
-
-### 17.3 Final Git Status & Verification
-* **Branches Created:** `main`, `feature/setup`, `feature/auth`, `feature/donor`, `feature/donations`, `feature/ngo`, `feature/admin`.
-* **Working Tree:** Clean (`nothing to commit, working tree clean`).
-* **Test Verification on `main`:** `uv run pytest tests/ -v` passed all **62 of 62 tests in 3.52s**.
+### 18.3 Verification & Build
+* **Command:** `npm run build`
+* **Result:** Production build passed cleanly in **2.87s** (`dist/assets/index-DJyCfurT.js` 236.28 kB).
