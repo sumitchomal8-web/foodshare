@@ -1,7 +1,7 @@
 # FoodShare – Master Specification
 
-**Version:** 0.2
-**Date:** 2026-10-19
+**Version:** 1.0
+**Date:** 2026-11-26
 **Rule:** This file is the single source of truth. No one changes a name, route, field or status in code before it is changed here and both partners agree. After every change: update the version and change log, commit, and paste the new version into both AI chats.
 
 ---
@@ -10,11 +10,16 @@
 
 | Phase | State |
 |---|---|
-| Planning and spec | In review (see section 13, open decisions) |
-| Phase 1: project setup, MongoDB connection, `/health`, indexes | Done (branch `feature/setup`, pull request open) |
-| Phase 2: password hashing and JWT helpers (`utils/security.py`) | Done (Person A) |
-| Phase 3: register / login routes | In progress (Person A) |
-| Donation, NGO and admin modules | Not started (Person B) |
+| Planning and spec | Completed |
+| Phase 1: project setup, MongoDB connection, `/health`, indexes | Done (`feature/setup`) |
+| Phase 2: password hashing and JWT helpers (`utils/security.py`) | Done (`feature/auth`) |
+| Phase 3: register / login / user routes | Done (`feature/auth`) |
+| Phase 4: Donor module | Done (`feature/donor`) |
+| Phase 5: Donation lifecycle module | Done (`feature/donations`) |
+| Phase 6: NGO / Volunteer module | Done (`feature/ngo`) |
+| Phase 7: Admin & Analytics modules | Done (`feature/admin`) |
+| Phase 8: Frontend (React + Vite + Tailwind CSS) | Done (`feature/frontend`) |
+| Phase 9: Docker & Containerization | Done |
 
 ---
 
@@ -333,16 +338,16 @@ Generate a secret key with: `uv run python -c "import secrets; print(secrets.tok
 
 ---
 
-## 13. Open decisions (resolve together, then record the answer here)
+## 13. Open decisions (resolved & implemented)
 
-1. **NGO and VOLUNTEER:** one role `NGO` with `ngo_profile.org_type` (current draft), or separate roles?
-2. **Verification gate:** must an NGO be `VERIFIED` by an admin before accepting donations? (Draft: yes.)
-3. **Expiry handling:** mark expired donations on read (draft) or with a background job later?
-4. **Delivery:** is NGO pickup the only flow? (Draft: yes.)
-5. **Atlas setup:** one shared cluster with a database user per person, or one cluster each? (Shared data lets you see each other's test records; separate clusters avoid conflicts.)
-6. **Database name:** `foodshare` (draft, section 3).
-7. **Tooling:** use `uv` for both (draft, section 1).
-8. **NGO registration:** is the `ngo_profile` object in the register body (section 7) the right shape?
+1. **NGO and VOLUNTEER:** Resolved as single `NGO` role with `ngo_profile.org_type: NGO | VOLUNTEER`.
+2. **Verification gate:** Resolved as yes — NGO must have `verification_status: VERIFIED` to accept donations.
+3. **Expiry handling:** Resolved as lazy expiry on read (if `expires_at < utcnow` and status is `AVAILABLE`, marked `EXPIRED`).
+4. **Delivery:** Resolved as NGO pickup lifecycle (`AVAILABLE -> ACCEPTED -> PICKED_UP -> DISTRIBUTED -> COMPLETED`).
+5. **Atlas setup:** Database name `foodshare`; configurable via `MONGODB_URL` with local MongoDB Docker option.
+6. **Database name:** `foodshare` (lowercase).
+7. **Tooling:** `uv` for Python backend, `npm` + `vite` for React frontend.
+8. **NGO registration:** `ngo_profile` required for `role = NGO` and prohibited for `DONOR`.
 
 ---
 
@@ -352,3 +357,4 @@ Generate a secret key with: `uv run python -c "import secrets; print(secrets.tok
 |---|---|---|---|
 | 2026-10-08 | 0.1 | Initial draft | |
 | 2026-10-19 | 0.2 | Switched tooling to uv; set database name `foodshare`; added project status, shared interfaces (section 6.1), register/login bodies, local setup, index ownership; expanded open decisions | |
+| 2026-11-26 | 1.0 | Full backend implementation (donations, NGO, admin, auth, donor), 62 unit/API tests, React frontend (Vite + Tailwind), Docker containerization, and resolved all open decisions | Person A & B |

@@ -11,7 +11,8 @@ Person B registers donations.py and ngo.py here.
 """
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.database import client, create_indexes, db
@@ -26,17 +27,37 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="FoodShare API",
-    version="0.2.0",
+    version="1.0.0",
     description="Connecting food donors with NGOs and volunteers.",
     lifespan=lifespan,
 )
+
+# ---------------------------------------------------------------------------
+# Cross-Origin Resource Sharing (CORS) Middleware
+# ---------------------------------------------------------------------------
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+@app.get("/", tags=["Root"])
+async def root():
+    return {
+        "message": "Welcome to FoodShare API",
+        "docs": "/docs",
+        "health": "/health",
+        "version": "1.0.0",
+    }
 
 
 # ---------------------------------------------------------------------------
 # Global error handler: unwrap FoodShareAPIException so HTTPException.detail
 # already has the {detail, code} shape defined in spec Section 8.
 # ---------------------------------------------------------------------------
-from fastapi import HTTPException
 
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
