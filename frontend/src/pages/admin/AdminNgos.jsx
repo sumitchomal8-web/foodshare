@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../../api/client';
 import StatusBadge from '../../components/StatusBadge';
+import { useToast } from '../../context/ToastContext';
 import { Check, X, Shield, AlertCircle, Building2, MapPin, Phone, Mail } from 'lucide-react';
 
 export default function AdminNgos() {
+  const { showToast } = useToast();
   const [ngos, setNgos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -33,9 +35,10 @@ export default function AdminNgos() {
     setActionLoading(id);
     try {
       await api.admin.verifyNgo(id, approve);
+      showToast(`NGO application ${approve ? 'approved' : 'rejected'} successfully`, approve ? 'success' : 'info');
       await fetchPendingNgos();
     } catch (err) {
-      alert(err.detail || `Failed to ${actionLabel.toLowerCase()} NGO`);
+      showToast(err.detail || `Failed to ${actionLabel.toLowerCase()} NGO`, 'error');
     } finally {
       setActionLoading(null);
     }

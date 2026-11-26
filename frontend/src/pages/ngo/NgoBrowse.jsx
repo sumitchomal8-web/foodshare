@@ -2,12 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { api } from '../../api/client';
 import { useAuth } from '../../context/AuthContext';
 import StatusBadge from '../../components/StatusBadge';
-import { Search, MapPin, Clock, AlertTriangle, CheckCircle, Utensils } from 'lucide-react';
+import { useToast } from '../../context/ToastContext';
+import { getExpiryCountdown } from '../../utils/formatters';
+import { Search, MapPin, Clock, AlertTriangle, Utensils } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export default function NgoBrowse() {
   const { isVerifiedNgo } = useAuth();
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
   const [donations, setDonations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -44,7 +47,7 @@ export default function NgoBrowse() {
 
   const handleAccept = async (donation) => {
     if (!isVerifiedNgo) {
-      alert('Your organization must be verified by an admin before accepting donations.');
+      showToast('Your organization must be verified by an admin before accepting donations.', 'warning');
       return;
     }
 
@@ -55,10 +58,10 @@ export default function NgoBrowse() {
     setAcceptingId(donation.id);
     try {
       await api.donations.accept(donation.id);
-      alert('Donation successfully accepted! Redirecting to your deliveries.');
+      showToast(`Successfully claimed "${donation.title}"! Redirecting...`, 'success');
       navigate('/ngo/deliveries');
     } catch (err) {
-      alert(err.detail || 'Could not accept donation. It may have been claimed or expired.');
+      showToast(err.detail || 'Could not accept donation. It may have been claimed or expired.', 'error');
       await fetchAvailable();
     } finally {
       setAcceptingId(null);
@@ -118,7 +121,7 @@ export default function NgoBrowse() {
           className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-5 py-2 rounded-lg text-sm shadow-sm"
         >
           <Search className="w-4 h-4" />
-          <span>Search</span>
+          <span>Filter</span>
         </button>
       </form>
 
@@ -142,63 +145,71 @@ export default function NgoBrowse() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {donations.map((d) => (
-            <div
-              key={d.id}
-              className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm hover:shadow transition flex flex-col justify-between"
-            >
-              <div>
-                <div className="flex justify-between items-start gap-2 mb-2">
-                  <h3 className="font-bold text-slate-900 text-lg leading-snug">{d.title}</h3>
-                  <StatusBadge status={d.status} />
+          {donations.map((d) => {
+            const expiry = getExpiryCountdown(d.expires_at);
+            return (
+              <div
+                key={d.id}
+                className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm hover:shadow transition flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex justify-between items-start gap-2 mb-2">
+                    <h3 className="font-bold text-slate-900 text-lg leading-snug">{d.title}</h3>
+                    <StatusBadge status={d.status} />
+                  </div>
+
+                  <div className="space-y-2 text-sm text-slate-600 mb-4">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded text-sm">
+                        {d.quantity} {d.quantity_unit}
+                      </span>
+                      <span className="text-xs bg-slate-100 text-slate-700 px-2 py-0.5 rounded uppercase font-semibold">
+                        {d.food_type}
+                      </span>
+                    </div>
+
+                    {d.description && <p className="text-slate-500 text-xs">{d.description}</p>}
+
+                    <div className="flex items-start gap-1.5 text-xs text-slate-500 pt-1">
+                      <MapPin className="w-4 h-4 text-slate-400 flex-shrink-0 mt-0.5" />
+                      <span>
+                        {d.pickup_address?.street}, {d.pickup_address?.city} ({d.pickup_address?.pincode})
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between text-xs pt-1">
+                      <div className="flex items-center gap-1.5 text-slate-500">
+                        <Clock className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                        <span>{new Date(d.expires_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                      </div>
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${expiry.badgeClass}`}>
+                        {expiry.label}
+                      </span>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="space-y-2 text-sm text-slate-600 mb-4">
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded text-sm">
-                      {d.quantity} {d.quantity_unit}
-                    </span>
-                    <span className="text-xs bg-slate-100 text-slate-700 px-2 py-0.5 rounded uppercase font-semibold">
-                      {d.food_type}
-                    </span>
-                  </div>
-
-                  {d.description && <p className="text-slate-500 text-xs">{d.description}</p>}
-
-                  <div className="flex items-start gap-1.5 text-xs text-slate-500 pt-1">
-                    <MapPin className="w-4 h-4 text-slate-400 flex-shrink-0 mt-0.5" />
-                    <span>
-                      {d.pickup_address?.street}, {d.pickup_address?.city} ({d.pickup_address?.pincode})
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                    <Clock className="w-4 h-4 text-slate-400 flex-shrink-0" />
-                    <span>Expires: {new Date(d.expires_at).toLocaleString()}</span>
-                  </div>
+                {/* Action Button */}
+                <div className="border-t border-slate-100 pt-3">
+                  <button
+                    onClick={() => handleAccept(d)}
+                    disabled={!isVerifiedNgo || acceptingId === d.id}
+                    className={`w-full py-2 px-4 rounded-lg font-semibold text-sm transition shadow-sm ${
+                      !isVerifiedNgo
+                        ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                        : 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                    }`}
+                  >
+                    {acceptingId === d.id
+                      ? 'Claiming...'
+                      : !isVerifiedNgo
+                      ? 'Verification Required'
+                      : 'Accept Donation'}
+                  </button>
                 </div>
               </div>
-
-              {/* Action Button */}
-              <div className="border-t border-slate-100 pt-3">
-                <button
-                  onClick={() => handleAccept(d)}
-                  disabled={!isVerifiedNgo || acceptingId === d.id}
-                  className={`w-full py-2 px-4 rounded-lg font-semibold text-sm transition shadow-sm ${
-                    !isVerifiedNgo
-                      ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                      : 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                  }`}
-                >
-                  {acceptingId === d.id
-                    ? 'Claiming...'
-                    : !isVerifiedNgo
-                    ? 'Verification Required'
-                    : 'Accept Donation'}
-                </button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

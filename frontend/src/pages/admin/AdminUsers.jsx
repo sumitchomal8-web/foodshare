@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../../api/client';
+import { useToast } from '../../context/ToastContext';
 import { Users, AlertCircle, CheckCircle2, XCircle } from 'lucide-react';
 
 export default function AdminUsers() {
+  const { showToast } = useToast();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [roleFilter, setRoleFilter] = useState('');
@@ -39,9 +41,10 @@ export default function AdminUsers() {
     setActionLoading(id);
     try {
       await api.admin.setUserStatus(id, newStatus);
+      showToast(`User account ${newStatus ? 'activated' : 'deactivated'} successfully`, 'info');
       await fetchUsers();
     } catch (err) {
-      alert(err.detail || `Failed to ${actionLabel.toLowerCase()} user`);
+      showToast(err.detail || `Failed to ${actionLabel.toLowerCase()} user`, 'error');
     } finally {
       setActionLoading(null);
     }

@@ -432,3 +432,29 @@ Per Section 2 of the Master Spec (*"Admin accounts are created manually in the d
 * **Backend Test Suite:** `uv run pytest tests/ -v` → **62/62 tests passed in 4.72s**.
 * **Frontend Production Build:** `npm run build` → **Passed in 4.95s** with zero errors.
 * **Project Status:** 100% complete, fully tested, containerized, and documented.
+
+
+---
+
+## 20. Performance, UX, and CI/CD Upgrades
+
+### 20.1 Backend Performance Monitoring
+* **Process Time Middleware:** Added `@app.middleware("http")` to `backend/app/main.py` adding `X-Process-Time` header to every API response, providing real-time backend latency metrics to clients.
+
+### 20.2 Frontend User Experience Enhancements
+1. **Interactive Toast Notifications (`frontend/src/context/ToastContext.jsx`):**
+   * Replaced blocking browser alerts with smooth, floating Tailwind toasts (success, error, warning, info) with 3.5s auto-dismiss and manual close buttons.
+   * Integrated across Donor cancellation/edit, NGO acceptance and delivery progression, and Admin verification/activation actions.
+2. **Dynamic Expiry Urgency (`frontend/src/utils/formatters.js`):**
+   * Real-time countdowns (`Expires in 45m (URGENT)`, `Expires in 3h 10m`) with color-coded urgency badges (red pulse when < 2h remain).
+3. **Donor Listing Edit Modal (`frontend/src/pages/donor/DonorDashboard.jsx`):**
+   * Interactive modal allowing donors to edit title, quantities, units, and descriptions for `AVAILABLE` donations per Spec Section 5.
+
+### 20.3 CI/CD Automation Pipeline
+* **GitHub Actions Workflow (`.github/workflows/ci.yml`):**
+  * **Job 1 (Backend):** Checks out code, sets up Python 3.12, installs `uv`, and executes `uv run pytest tests/ -v`.
+  * **Job 2 (Frontend):** Sets up Node 20, installs dependencies via `npm ci`, and verifies production build (`npm run build`).
+
+### 20.4 Verification
+* **Backend:** All 62 test cases pass in ~4.5s (`62 passed in 7.88s`).
+* **Frontend:** Production build compiles cleanly with zero errors.

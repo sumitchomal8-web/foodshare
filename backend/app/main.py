@@ -9,6 +9,7 @@ ROUTER REGISTRATION ORDER MATTERS (spec Section 7 note):
 Person A adds their routers once feature/auth is merged.
 Person B registers donations.py and ngo.py here.
 """
+import time
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Request
@@ -42,6 +43,15 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def add_process_time_header(request: Request, call_next):
+    start_time = time.perf_counter()
+    response = await call_next(request)
+    process_time = time.perf_counter() - start_time
+    response.headers["X-Process-Time"] = f"{process_time:.4f}s"
+    return response
 
 
 @app.get("/", tags=["Root"])

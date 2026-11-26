@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../../api/client';
 import StatusBadge from '../../components/StatusBadge';
+import { useToast } from '../../context/ToastContext';
 import { Truck, CheckCircle2, Clock, MapPin, Package, ArrowRight, AlertCircle } from 'lucide-react';
 
 export default function NgoDeliveries() {
+  const { showToast } = useToast();
   const [donations, setDonations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('');
@@ -32,13 +34,20 @@ export default function NgoDeliveries() {
   const handleTransition = async (id, action) => {
     setActionLoading(id);
     try {
-      if (action === 'pickup') await api.donations.pickup(id);
-      else if (action === 'distribute') await api.donations.distribute(id);
-      else if (action === 'complete') await api.donations.complete(id);
+      if (action === 'pickup') {
+        await api.donations.pickup(id);
+        showToast('Donation marked as Picked Up!', 'success');
+      } else if (action === 'distribute') {
+        await api.donations.distribute(id);
+        showToast('Donation marked as Distributed!', 'success');
+      } else if (action === 'complete') {
+        await api.donations.complete(id);
+        showToast('Donation marked as Completed!', 'success');
+      }
 
       await fetchMyDeliveries();
     } catch (err) {
-      alert(err.detail || `Failed to transition donation: ${err.message}`);
+      showToast(err.detail || `Failed to transition donation: ${err.message}`, 'error');
     } finally {
       setActionLoading(null);
     }
