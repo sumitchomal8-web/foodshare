@@ -4,6 +4,7 @@ class Settings(BaseSettings):
     mongodb_url: str
     db_name: str
     secret_key: str
+    cors_origins: str = "http://localhost:5173"
     model_config = SettingsConfigDict(env_file=".env")
 
 settings = Settings()

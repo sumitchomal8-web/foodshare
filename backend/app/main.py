@@ -1,9 +1,11 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from fastapi.encoders import jsonable_encoder
 
+from app.config import settings
 from app.database import client, create_indexes
 from app.utils.errors import AppError
 from app.routers.auth import router as auth_router
@@ -17,6 +19,19 @@ async def lifespan(app: FastAPI):
     client.close()
 
 app = FastAPI(title="FoodShare API", lifespan=lifespan)
+
+allowed_origins = [
+    origin.strip()
+    for origin in settings.cors_origins.split(",")
+    if origin.strip()
+]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allowed_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Register routers
 app.include_router(auth_router, prefix="/api/v1")
