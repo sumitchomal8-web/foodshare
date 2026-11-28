@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../api/client';
 import { useAuth } from '../../context/AuthContext';
+import ImageUploadField from '../../components/ImageUploadField';
 import { Utensils, AlertCircle } from 'lucide-react';
 
 export default function CreateDonation() {
@@ -23,6 +24,7 @@ export default function CreateDonation() {
     quantity: '',
     quantity_unit: 'PLATES',
     description: '',
+    food_image_url: '',
     available_from: defaultAvailable,
     expires_at: defaultExpires,
     street: user?.address?.street || '',
@@ -49,6 +51,7 @@ export default function CreateDonation() {
       quantity: Number(formData.quantity),
       quantity_unit: formData.quantity_unit,
       description: formData.description || null,
+      food_image_url: formData.food_image_url || null,
       available_from: new Date(formData.available_from).toISOString(),
       expires_at: new Date(formData.expires_at).toISOString(),
       pickup_address: {
@@ -170,6 +173,12 @@ export default function CreateDonation() {
               className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 text-sm"
             />
           </div>
+
+          <ImageUploadField
+            label="Food Photo (Optional, max 3 MB)"
+            value={formData.food_image_url}
+            onChange={(url) => setFormData((prev) => ({ ...prev, food_image_url: url }))}
+          />
 
           {/* Timing */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

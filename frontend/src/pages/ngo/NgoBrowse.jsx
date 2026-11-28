@@ -170,6 +170,16 @@ export default function NgoBrowse() {
 
                     {d.description && <p className="text-slate-500 text-xs">{d.description}</p>}
 
+                    {d.food_image_url && (
+                      <a href={d.food_image_url} target="_blank" rel="noopener noreferrer" className="block pt-1">
+                        <img
+                          src={d.food_image_url}
+                          alt={d.title}
+                          className="h-32 w-full rounded-lg object-cover border border-slate-200"
+                        />
+                      </a>
+                    )}
+
                     <div className="flex items-start gap-1.5 text-xs text-slate-500 pt-1">
                       <MapPin className="w-4 h-4 text-slate-400 flex-shrink-0 mt-0.5" />
                       <span>

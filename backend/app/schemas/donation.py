@@ -48,6 +48,7 @@ class DonationCreate(BaseModel):
     quantity: float = Field(..., gt=0)
     quantity_unit: QuantityUnit
     description: Optional[str] = None
+    food_image_url: Optional[str] = None
     pickup_address: AddressSchema
     available_from: datetime
     expires_at: datetime
@@ -59,9 +60,14 @@ class DonationUpdate(BaseModel):
     quantity: Optional[float] = Field(None, gt=0)
     quantity_unit: Optional[QuantityUnit] = None
     description: Optional[str] = None
+    food_image_url: Optional[str] = None
     pickup_address: Optional[AddressSchema] = None
     available_from: Optional[datetime] = None
     expires_at: Optional[datetime] = None
+
+
+class TransitionProofBody(BaseModel):
+    image_url: Optional[str] = None
 
 
 class DonationResponse(BaseModel):
@@ -72,6 +78,9 @@ class DonationResponse(BaseModel):
     quantity: float
     quantity_unit: QuantityUnit
     description: Optional[str] = None
+    food_image_url: Optional[str] = None
+    pickup_image_url: Optional[str] = None
+    delivery_image_url: Optional[str] = None
     pickup_address: AddressSchema
     available_from: datetime
     expires_at: datetime

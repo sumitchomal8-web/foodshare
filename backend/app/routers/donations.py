@@ -22,13 +22,14 @@ See note at the bottom of this file.
 """
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Body, Depends, Query
 
 from app.database import db
 from app.schemas.donation import (
     DonationResponse,
     DonationStatus,
     PaginatedDonationsResponse,
+    TransitionProofBody,
 )
 from app.services.donation_service import (
     accept_donation,
@@ -113,6 +114,7 @@ async def accept(
 @router.post("/{donation_id}/pickup", response_model=DonationResponse)
 async def mark_picked_up(
     donation_id: str,
+    body: Optional[TransitionProofBody] = Body(default=None),
     current_user: dict = Depends(require_role("NGO")),
 ):
     """
@@ -124,12 +126,14 @@ async def mark_picked_up(
         target_status=DonationStatus.PICKED_UP,
         actor=current_user,
         db=db,
+        image_url=body.image_url if body else None,
     )
 
 
 @router.post("/{donation_id}/distribute", response_model=DonationResponse)
 async def mark_distributed(
     donation_id: str,
+    body: Optional[TransitionProofBody] = Body(default=None),
     current_user: dict = Depends(require_role("NGO")),
 ):
     """
@@ -141,12 +145,14 @@ async def mark_distributed(
         target_status=DonationStatus.DISTRIBUTED,
         actor=current_user,
         db=db,
+        image_url=body.image_url if body else None,
     )
 
 
 @router.post("/{donation_id}/complete", response_model=DonationResponse)
 async def mark_completed(
     donation_id: str,
+    body: Optional[TransitionProofBody] = Body(default=None),
     current_user: dict = Depends(require_role("NGO", "ADMIN")),
 ):
     """
@@ -158,6 +164,7 @@ async def mark_completed(
         target_status=DonationStatus.COMPLETED,
         actor=current_user,
         db=db,
+        image_url=body.image_url if body else None,
     )
 
 

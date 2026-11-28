@@ -397,7 +397,8 @@ async def transition_donation_status(
     donation_id: str,
     target_status: DonationStatus,
     actor: Dict[str, Any],
-    db=default_db
+    db=default_db,
+    image_url: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Transitions donation status to PICKED_UP, DISTRIBUTED, COMPLETED, or CANCELLED.
@@ -429,6 +430,12 @@ async def transition_donation_status(
     }
     if status_timestamp_field:
         set_fields[status_timestamp_field] = now
+
+    if image_url:
+        if target_status == DonationStatus.PICKED_UP:
+            set_fields["pickup_image_url"] = image_url
+        elif target_status in (DonationStatus.DISTRIBUTED, DonationStatus.COMPLETED):
+            set_fields["delivery_image_url"] = image_url
 
     push_history = {
         "status": target_status.value,
