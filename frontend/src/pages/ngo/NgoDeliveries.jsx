@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../../api/client';
 import StatusBadge from '../../components/StatusBadge';
+import ImageUploadField from '../../components/ImageUploadField';
 import { useToast } from '../../context/ToastContext';
 import { Truck, CheckCircle2, Clock, MapPin, Package, ArrowRight, AlertCircle } from 'lucide-react';
 
@@ -10,6 +11,7 @@ export default function NgoDeliveries() {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('');
   const [actionLoading, setActionLoading] = useState(null);
+  const [proofImages, setProofImages] = useState({});
   const [error, setError] = useState('');
 
   const fetchMyDeliveries = async () => {
@@ -32,19 +34,35 @@ export default function NgoDeliveries() {
   }, [statusFilter]);
 
   const handleTransition = async (id, action) => {
+    const proofUrl = proofImages[id] || '';
+    if ((action === 'pickup' || action === 'distribute') && !proofUrl) {
+      showToast(
+        action === 'pickup'
+          ? 'Please upload a pickup proof photo first.'
+          : 'Please upload a delivery/drop proof photo first.',
+        'error'
+      );
+      return;
+    }
+
     setActionLoading(id);
     try {
       if (action === 'pickup') {
-        await api.donations.pickup(id);
+        await api.donations.pickup(id, proofUrl);
         showToast('Donation marked as Picked Up!', 'success');
       } else if (action === 'distribute') {
-        await api.donations.distribute(id);
+        await api.donations.distribute(id, proofUrl);
         showToast('Donation marked as Distributed!', 'success');
       } else if (action === 'complete') {
-        await api.donations.complete(id);
+        await api.donations.complete(id, proofUrl || undefined);
         showToast('Donation marked as Completed!', 'success');
       }
 
+      setProofImages((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
       await fetchMyDeliveries();
     } catch (err) {
       showToast(err.detail || `Failed to transition donation: ${err.message}`, 'error');
@@ -129,6 +147,30 @@ export default function NgoDeliveries() {
                     </span>
                   </div>
 
+                  {/* Proof Photos */}
+                  {(d.food_image_url || d.pickup_image_url || d.delivery_image_url) && (
+                    <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-100">
+                      {d.food_image_url && (
+                        <a href={d.food_image_url} target="_blank" rel="noopener noreferrer" className="text-center">
+                          <img src={d.food_image_url} alt="Donor food" className="h-14 w-14 rounded-lg object-cover border border-slate-200" />
+                          <span className="block text-[10px] text-slate-500 mt-0.5">Food</span>
+                        </a>
+                      )}
+                      {d.pickup_image_url && (
+                        <a href={d.pickup_image_url} target="_blank" rel="noopener noreferrer" className="text-center">
+                          <img src={d.pickup_image_url} alt="Pickup proof" className="h-14 w-14 rounded-lg object-cover border border-slate-200" />
+                          <span className="block text-[10px] text-slate-500 mt-0.5">Pickup</span>
+                        </a>
+                      )}
+                      {d.delivery_image_url && (
+                        <a href={d.delivery_image_url} target="_blank" rel="noopener noreferrer" className="text-center">
+                          <img src={d.delivery_image_url} alt="Delivery proof" className="h-14 w-14 rounded-lg object-cover border border-slate-200" />
+                          <span className="block text-[10px] text-slate-500 mt-0.5">Drop</span>
+                        </a>
+                      )}
+                    </div>
+                  )}
+
                   {/* Timeline timestamps */}
                   <div className="text-xs text-slate-400 border-t border-slate-100 pt-2 space-y-1">
                     {d.accepted_at && (
@@ -148,27 +190,49 @@ export default function NgoDeliveries() {
               </div>
 
               {/* Status Transition Action Buttons */}
-              <div className="border-t border-slate-100 pt-3">
+              <div className="border-t border-slate-100 pt-3 space-y-3">
                 {d.status === 'ACCEPTED' && (
-                  <button
-                    onClick={() => handleTransition(d.id, 'pickup')}
-                    disabled={actionLoading === d.id}
-                    className="w-full flex items-center justify-center gap-2 bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2 px-4 rounded-lg text-sm shadow-sm transition"
-                  >
-                    <Truck className="w-4 h-4" />
-                    <span>{actionLoading === d.id ? 'Updating...' : 'Mark as Picked Up'}</span>
-                  </button>
+                  <>
+                    <ImageUploadField
+                      label="Pickup Proof Photo"
+                      required
+                      compact
+                      value={proofImages[d.id] || ''}
+                      onChange={(url) =>
+                        setProofImages((prev) => ({ ...prev, [d.id]: url }))
+                      }
+                    />
+                    <button
+                      onClick={() => handleTransition(d.id, 'pickup')}
+                      disabled={actionLoading === d.id || !proofImages[d.id]}
+                      className="w-full flex items-center justify-center gap-2 bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white font-semibold py-2 px-4 rounded-lg text-sm shadow-sm transition"
+                    >
+                      <Truck className="w-4 h-4" />
+                      <span>{actionLoading === d.id ? 'Updating...' : 'Mark as Picked Up'}</span>
+                    </button>
+                  </>
                 )}
 
                 {d.status === 'PICKED_UP' && (
-                  <button
-                    onClick={() => handleTransition(d.id, 'distribute')}
-                    disabled={actionLoading === d.id}
-                    className="w-full flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-lg text-sm shadow-sm transition"
-                  >
-                    <Package className="w-4 h-4" />
-                    <span>{actionLoading === d.id ? 'Updating...' : 'Mark as Distributed'}</span>
-                  </button>
+                  <>
+                    <ImageUploadField
+                      label="Drop / Delivery Proof Photo"
+                      required
+                      compact
+                      value={proofImages[d.id] || ''}
+                      onChange={(url) =>
+                        setProofImages((prev) => ({ ...prev, [d.id]: url }))
+                      }
+                    />
+                    <button
+                      onClick={() => handleTransition(d.id, 'distribute')}
+                      disabled={actionLoading === d.id || !proofImages[d.id]}
+                      className="w-full flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white font-semibold py-2 px-4 rounded-lg text-sm shadow-sm transition"
+                    >
+                      <Package className="w-4 h-4" />
+                      <span>{actionLoading === d.id ? 'Updating...' : 'Mark as Distributed'}</span>
+                    </button>
+                  </>
                 )}
 
                 {d.status === 'DISTRIBUTED' && (

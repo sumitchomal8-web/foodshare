@@ -105,7 +105,7 @@ async def health_check():
 # 5. ngo.router    (/api/v1/ngo)
 # 6. admin.router  (/api/v1/admin)
 # ---------------------------------------------------------------------------
-from app.routers import admin, auth, donations, donor, ngo, users
+from app.routers import admin, auth, donations, donor, ngo, uploads, users
 
 app.include_router(auth.router)
 app.include_router(users.router)
@@ -113,3 +113,4 @@ app.include_router(donor.router)   # MUST precede donations.router for /donation
 app.include_router(donations.router)
 app.include_router(ngo.router)
 app.include_router(admin.router)
+app.include_router(uploads.router)

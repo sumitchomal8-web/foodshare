@@ -51,6 +51,9 @@ async def create_donation(
         "quantity":        body.quantity,
         "quantity_unit":   body.quantity_unit.value,
         "description":     body.description,
+        "food_image_url":  body.food_image_url,
+        "pickup_image_url": None,
+        "delivery_image_url": None,
         "pickup_address":  body.pickup_address.model_dump(),
         "available_from":  body.available_from,
         "expires_at":      body.expires_at,
@@ -107,7 +110,7 @@ async def update_donation(
         raise FoodShareAPIException(404, "NOT_FOUND", "Donation not found or not editable.")
 
     updates: dict = {"updated_at": datetime.now(timezone.utc)}
-    for field in ("title", "food_type", "quantity", "quantity_unit", "description"):
+    for field in ("title", "food_type", "quantity", "quantity_unit", "description", "food_image_url"):
         val = getattr(body, field)
         if val is not None:
             updates[field] = val.value if hasattr(val, "value") else val

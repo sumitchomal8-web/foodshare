@@ -153,6 +153,29 @@ export default function DonorDashboard() {
 
                     {d.description && <p className="text-slate-500 text-xs italic">{d.description}</p>}
 
+                    {(d.food_image_url || d.pickup_image_url || d.delivery_image_url) && (
+                      <div className="flex flex-wrap gap-2 pt-2">
+                        {d.food_image_url && (
+                          <a href={d.food_image_url} target="_blank" rel="noopener noreferrer" className="text-center">
+                            <img src={d.food_image_url} alt="Food" className="h-14 w-14 rounded-lg object-cover border border-slate-200" />
+                            <span className="block text-[10px] text-slate-500 mt-0.5">Food</span>
+                          </a>
+                        )}
+                        {d.pickup_image_url && (
+                          <a href={d.pickup_image_url} target="_blank" rel="noopener noreferrer" className="text-center">
+                            <img src={d.pickup_image_url} alt="Pickup" className="h-14 w-14 rounded-lg object-cover border border-slate-200" />
+                            <span className="block text-[10px] text-slate-500 mt-0.5">Pickup</span>
+                          </a>
+                        )}
+                        {d.delivery_image_url && (
+                          <a href={d.delivery_image_url} target="_blank" rel="noopener noreferrer" className="text-center">
+                            <img src={d.delivery_image_url} alt="Delivery" className="h-14 w-14 rounded-lg object-cover border border-slate-200" />
+                            <span className="block text-[10px] text-slate-500 mt-0.5">Drop</span>
+                          </a>
+                        )}
+                      </div>
+                    )}
+
                     <div className="flex items-start gap-1.5 text-xs text-slate-500 pt-1">
                       <MapPin className="w-4 h-4 text-slate-400 flex-shrink-0 mt-0.5" />
                       <span>

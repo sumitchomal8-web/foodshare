@@ -7,8 +7,9 @@ const API_BASE = '/api/v1';
 
 async function request(endpoint, options = {}) {
   const token = localStorage.getItem('foodshare_token');
+  const isFormData = options.body instanceof FormData;
   const headers = {
-    'Content-Type': 'application/json',
+    ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
     ...(options.headers || {}),
   };
 
@@ -93,18 +94,32 @@ export const api = {
       request(`/donations/${id}/accept`, {
         method: 'POST',
       }),
-    pickup: (id) =>
+    pickup: (id, imageUrl) =>
       request(`/donations/${id}/pickup`, {
         method: 'POST',
+        ...(imageUrl ? { body: JSON.stringify({ image_url: imageUrl }) } : {}),
       }),
-    distribute: (id) =>
+    distribute: (id, imageUrl) =>
       request(`/donations/${id}/distribute`, {
         method: 'POST',
+        ...(imageUrl ? { body: JSON.stringify({ image_url: imageUrl }) } : {}),
       }),
-    complete: (id) =>
+    complete: (id, imageUrl) =>
       request(`/donations/${id}/complete`, {
         method: 'POST',
+        ...(imageUrl ? { body: JSON.stringify({ image_url: imageUrl }) } : {}),
       }),
+  },
+
+  uploads: {
+    uploadImage: (file) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      return request('/uploads/image', {
+        method: 'POST',
+        body: formData,
+      });
+    },
   },
 
   // NGO specific
